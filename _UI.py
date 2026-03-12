@@ -1,8 +1,6 @@
 # ThaiID Blacklist Check — Tkinter UI
 # by Athipbadee Taweesup
 
-
-import sys
 import time
 import threading
 import tkinter as tk
@@ -86,8 +84,7 @@ class App(tk.Tk):
         FlatButton(frame, "Upload Blacklist CSV",
                    command=self._pick_csv).pack()
 
-        self._upload_error = tk.Label(frame, text="", bg=BG, fg=ACCENT,
-                                      font=("Courier New", 9))
+        self._upload_error = tk.Label(frame, text="", bg=BG, fg=ACCENT, font=("Courier New", 9))
         self._upload_error.pack(pady=(12, 0))
 
     def _pick_csv(self):

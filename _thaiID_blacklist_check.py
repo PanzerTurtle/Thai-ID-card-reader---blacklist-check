@@ -1,7 +1,6 @@
 # Blacklist checker for Thai National ID Card Reader
 # by Athipbadee Taweesup
 
-import sys
 import time
 import csv
 import unicodedata
