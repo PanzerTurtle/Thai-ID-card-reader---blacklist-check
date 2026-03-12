@@ -52,11 +52,12 @@ class App(tk.Tk):
         self.resizable(False, False)
         self.geometry("620x480")
 
-        self.id_bl    = {}
-        self.name_bl  = []
-        self.last_cid = None
-        self._poll_thread = None
-        self._running     = False
+        self.id_bl          = {}
+        self.name_bl        = []
+        self.last_cid       = None
+        self._poll_thread   = None
+        self._running       = False
+        self._manual_active = False  # True while a manual search result is shown
 
         self._build_upload_page()
 
@@ -68,21 +69,10 @@ class App(tk.Tk):
         frame = tk.Frame(self, bg=BG)
         frame.place(relx=0.5, rely=0.5, anchor="center")
 
-        tk.Label(frame, text="ThaiID Blacklist Check",
-                 bg=BG, fg=TEXT,
-                 font=("Courier New", 20, "bold")).pack(pady=(0, 4))
-
-        tk.Label(frame, text="ระบบตรวจสอบรายชื่อบัญชีดำ",
-                 bg=BG, fg=SUBTEXT,
-                 font=("Courier New", 10)).pack(pady=(0, 36))
-
-        tk.Label(frame,
-                 text="อัพโหลดไฟล์ blacklist.csv",
-                 bg=BG, fg=SUBTEXT,
-                 font=("Courier New", 10)).pack(pady=(0, 14))
-
-        FlatButton(frame, "Upload Blacklist CSV",
-                   command=self._pick_csv).pack()
+        tk.Label(frame, text="ThaiID Blacklist Check", bg=BG, fg=TEXT, font=("Courier New", 20, "bold")).pack(pady=(0, 4))
+        tk.Label(frame, text="ระบบตรวจสอบรายชื่อบัญชีดำ", bg=BG, fg=SUBTEXT, font=("Courier New", 10)).pack(pady=(0, 36))
+        tk.Label(frame, text="อัพโหลดไฟล์ blacklist.csv", bg=BG, fg=SUBTEXT, font=("Courier New", 10)).pack(pady=(0, 14))
+        FlatButton(frame, "Upload Blacklist CSV", command=self._pick_csv).pack()
 
         self._upload_error = tk.Label(frame, text="", bg=BG, fg=ACCENT, font=("Courier New", 9))
         self._upload_error.pack(pady=(12, 0))
@@ -132,9 +122,7 @@ class App(tk.Tk):
         search_frame = tk.Frame(self, bg=BG)
         search_frame.pack(fill="x", padx=20, pady=(14, 0))
 
-        tk.Label(search_frame, text="ค้นหา",
-                 bg=BG, fg=SUBTEXT,
-                 font=("Courier New", 9)).pack(anchor="w", pady=(0, 4))
+        tk.Label(search_frame, text="ค้นหา", bg=BG, fg=SUBTEXT, font=("Courier New", 9)).pack(anchor="w", pady=(0, 4))
 
         input_row = tk.Frame(search_frame, bg=BG)
         input_row.pack(fill="x")
@@ -150,16 +138,13 @@ class App(tk.Tk):
             highlightbackground="#2a2a4a",
             highlightthickness=1,
         )
-        self._search_entry.pack(side="left", fill="x", expand=True,
-                                ipady=8, padx=(0, 8))
+        self._search_entry.pack(side="left", fill="x", expand=True, ipady=8, padx=(0, 8))
         self._search_entry.bind("<Return>", lambda e: self._manual_search())
 
         FlatButton(input_row, "ค้นหา", command=self._manual_search).pack(side="left")
 
-        # ── Status badge (CLEAR / BLACKLISTED / waiting) ──────────────────
-        self._status_frame = tk.Frame(self, bg=IDLE_BG,
-                                      highlightbackground="#2a2a4a",
-                                      highlightthickness=1)
+        # ── Status badge ──────────────────────────────────────────────────
+        self._status_frame = tk.Frame(self, bg=IDLE_BG, highlightbackground="#2a2a4a", highlightthickness=1)
         self._status_frame.pack(fill="x", padx=20, pady=(14, 0))
 
         self._status_label = tk.Label(
@@ -172,9 +157,7 @@ class App(tk.Tk):
         self._status_label.pack()
 
         # ── Card info display ─────────────────────────────────────────────
-        info_outer = tk.Frame(self, bg=PANEL,
-                              highlightbackground="#2a2a4a",
-                              highlightthickness=1)
+        info_outer = tk.Frame(self, bg=PANEL, highlightbackground="#2a2a4a", highlightthickness=1)
         info_outer.pack(fill="both", expand=True, padx=20, pady=12)
 
         self._info_text = tk.Text(
@@ -192,7 +175,6 @@ class App(tk.Tk):
         )
         self._info_text.pack(fill="both", expand=True)
 
-        # Tag styles
         self._info_text.tag_config("label",  foreground=SUBTEXT)
         self._info_text.tag_config("value",  foreground=TEXT)
         self._info_text.tag_config("reason", foreground=ACCENT)
@@ -207,14 +189,13 @@ class App(tk.Tk):
         if not query:
             return
 
-        # Build a fake card_data so check_blacklist can run normally
-        # Try to detect whether input looks like an ID (digits only) or a name
         if query.isdigit():
-            card_data = {"CID": query, "TH Fullname": ""}
+            card_data = {"CID": query, "TH Fullname": "", "EN Fullname": ""}
         else:
-            card_data = {"CID": "", "TH Fullname": query}
+            card_data = {"CID": "", "TH Fullname": query, "EN Fullname": query}
 
         is_bl, reason = check_blacklist(card_data, self.id_bl, self.name_bl)
+        self._manual_active = True
         self._show_search_result(query, is_bl, reason)
 
     def _show_search_result(self, query, is_bl, reason):
@@ -251,6 +232,7 @@ class App(tk.Tk):
         t.config(state="disabled")
 
     def _show_card(self, card_data, is_bl, reason):
+        self._manual_active = False
         LABELS = [
             ("CID",           "เลขประจำตัวประชาชน"),
             ("TH Fullname",   "ชื่อ (TH)"),
@@ -282,6 +264,8 @@ class App(tk.Tk):
                 text="ผ่าน ไม่พบบุคคลต้องห้าม", bg=CLEAR_BG, fg=CLEAR_FG)
 
     def _set_no_reader(self):
+        if self._manual_active:
+            return
         self._status_frame.config(bg=IDLE_BG)
         self._status_label.config(
             text="ไม่พบเครื่องอ่านบัตร",
@@ -289,6 +273,8 @@ class App(tk.Tk):
         self._write_info([("idle", "ไม่พบเครื่องอ่านบัตร\n")])
 
     def _reset_display(self):
+        if self._manual_active:
+            return
         self._status_frame.config(bg=IDLE_BG)
         self._status_label.config(
             text="กรุณาเสียบบัตร...",
@@ -306,12 +292,19 @@ class App(tk.Tk):
         self._running = False
 
     def _poll_loop(self):
+        _had_reader = False
         while self._running:
             reader_list = readers()
             if not reader_list:
+                if _had_reader:
+                    _had_reader = False
                 self.after(0, self._set_no_reader)
                 time.sleep(1)
                 continue
+            if not _had_reader:
+                _had_reader = True
+                if not self._manual_active:
+                    self.after(0, self._reset_display)
             try:
                 card_data = read_card(reader_list)
                 if card_data:
@@ -348,8 +341,9 @@ class App(tk.Tk):
 def main_UI():
     app = App()
     app.protocol("WM_DELETE_WINDOW", app.on_close)
-    app.mainloop() 
+    app.mainloop()
 
 
 if __name__ == "__main__":
     main_UI()
+    
