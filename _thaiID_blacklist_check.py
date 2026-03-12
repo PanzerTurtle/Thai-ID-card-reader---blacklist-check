@@ -112,7 +112,7 @@ def read_card(reader_list):
                         value = {"1": "ชาย", "2": "หญิง"}.get(value, value)
                     card_data[label] = value
     except NoCardException:
-        print("No card inserted.")
+        pass
     return card_data
 
 

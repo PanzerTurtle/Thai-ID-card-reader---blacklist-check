@@ -1,8 +1,6 @@
 # ThaiID Blacklist Check — Tkinter UI
 # by Athipbadee Taweesup
-#
-# Run with:  python thaiID_blacklist_ui.py
-# Requires:  _thaiID_blacklist_check.py in the same directory
+
 
 import sys
 import time
