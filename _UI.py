@@ -47,7 +47,7 @@ class FlatButton(tk.Label):
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("ThaiID Blacklist Check")
+        self.title("ThaiID Blacklist Check - v1.0 by Athipbadee Taweesup")
         self.configure(bg=BG)
         self.resizable(False, False)
         self.geometry("620x480")
@@ -57,7 +57,7 @@ class App(tk.Tk):
         self.last_cid       = None
         self._poll_thread   = None
         self._running       = False
-        self._manual_active = False  # True while a manual search result is shown
+        self._manual_active = False
 
         self._build_upload_page()
 
@@ -87,14 +87,14 @@ class App(tk.Tk):
 
         if not path.lower().endswith(".csv"):
             self._upload_error.config(
-                text="✗  Wrong file type — please select a .csv file")
+                text="Wrong file type — please select a .csv file")
             return
 
         try:
             id_bl, name_bl = load_blacklist(path)
         except Exception as e:
             self._upload_error.config(
-                text=f"✗  Failed to load file: {e}")
+                text=f"Failed to load file: {e}")
             return
 
         self.id_bl   = id_bl
