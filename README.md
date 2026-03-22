@@ -1,7 +1,6 @@
 Installation
 
-all source files are provided
-only main.exe is required for the working build
+all source files are provided, only main.exe is required for the working build
 
 open main.exe and the user will be prompted to upload a .csv list of names to be referenced as blacklist
 test_blacklist.csv is provided with a random name and ID
